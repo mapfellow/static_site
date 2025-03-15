@@ -13,10 +13,11 @@ def main():
 	if len(sys.argv) > 1:
 		basepath = sys.argv[1]
 	print(f"{basepath}static")	
-	copy_static_files(f"{basepath}static", f"{basepath}docs", basepath)
-	generate_pages_recursive(f"{basepath}content", f"{basepath}static/template.html", f"{basepath}docs", basepath)
+	copy_static_files("./static", "./docs", basepath)
+	generate_pages_recursive("./content", "./static/template.html", "./docs", basepath)
 	
-	"""print("hello world")
+	"""mapfellow.github.io/static_site/
+	print("hello world")
 	tn = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
 	print(f"{tn}")
 	#copy_static_files("./static", "./public")
@@ -43,7 +44,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
 			#print(f"dir: {new_src}")								
 			print(f"{new_dst}\n")
 			log += f"mkdir {new_dst}\n"
-			log += generate_pages_recursive(new_src, template_path, new_dst, log)
+			log += generate_pages_recursive(new_src, template_path, new_dst, basepath, log)
 		else:
 			if os.path.splitext(new_src)[-1].lower() == '.md':
 				new_dst = os.path.join(dest_dir_path, file)
@@ -88,10 +89,13 @@ def generate_page(from_path, template_path, dest_path, basepath):
 	tplt.close()
 	final = template.replace("{{ Content }}",html_string,1)
 	final = final.replace("{{ Title }}",title,1)
-	final = final.replace("href=\"/",f"href=\"{basepath}")
-	final = final.replace("src=\"/",f"src=\"{basepath}")
+	rep_href = f"href=\"{basepath}"
+	rep_src = f"src=\"{basepath}"
+	print(f"newlinks {rep_href} {rep_src}")
+	final = final.replace("href=\"/",rep_href, -1)
+	final = final.replace("src=\"/",rep_src, -1)
 	#print(f"{final}")
-	print(f"dst path {dest_path}")
+	#print(f"dst path {dest_path}")
 	dst = open(dest_path, "w")
 	dst.write(final)
 	dst.close()
