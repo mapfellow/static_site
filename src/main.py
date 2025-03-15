@@ -1,4 +1,4 @@
-import re, os, shutil
+import re, os, shutil, sys
 from enum import Enum 
 from textnode import *
 from htmlnode import *
@@ -7,8 +7,14 @@ from parentnode import *
 from blocks import *
 
 def main():
-	copy_static_files("./static", "./public")
-	generate_pages_recursive("./content", "./static/template.html", "./public")
+	basepath = "./"
+	#print(f"{sys.argv[1]}")
+	#print(f"{sys.argv[1] == ""}")
+	if len(sys.argv) > 1:
+		basepath = sys.argv[1]
+	print(f"{basepath}static")	
+	copy_static_files(f"{basepath}static", f"{basepath}docs", basepath)
+	generate_pages_recursive(f"{basepath}content", f"{basepath}static/template.html", f"{basepath}docs", basepath)
 	
 	"""print("hello world")
 	tn = TextNode("This is a text node", TextType.BOLD, "https://www.boot.dev")
@@ -22,7 +28,7 @@ def main():
 			   pero pondremos algo mas""
 			   )}")"""
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, log = ""):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath, log = ""):
 	if not os.path.exists(dir_path_content):
 		raise Exception("source directory does not exist")
 	files = os.listdir(dir_path_content)
@@ -42,7 +48,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, log
 			if os.path.splitext(new_src)[-1].lower() == '.md':
 				new_dst = os.path.join(dest_dir_path, file)
 				new_dst = os.path.splitext(new_dst)[:-1][0] + ".html"
-				generate_page(new_src, template_path, new_dst)
+				generate_page(new_src, template_path, new_dst, basepath)
 				css_dir = os.path.dirname(template_path)
 				#print(f"css dir {css_dir}")
 				css_file = os.path.basename(file)					
@@ -58,10 +64,10 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, log
 				print(f"dst {dst_css_file}")
 				shutil.copy(src_css, dst_css_file)
 				log += f"generated {new_src}\n"
-	print (f"generator: \n{log}")
+	#print (f"generator: \n{log}")
 	return log
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
 	print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 	contents = ""
 	template = ""
@@ -82,13 +88,15 @@ def generate_page(from_path, template_path, dest_path):
 	tplt.close()
 	final = template.replace("{{ Content }}",html_string,1)
 	final = final.replace("{{ Title }}",title,1)
+	final = final.replace("href=\"/",f"href=\"{basepath}")
+	final = final.replace("src=\"/",f"src=\"{basepath}")
 	#print(f"{final}")
 	print(f"dst path {dest_path}")
 	dst = open(dest_path, "w")
 	dst.write(final)
 	dst.close()
 
-def copy_static_files(src, dst, log = ""):
+def copy_static_files(src, dst, basepath, log = ""):
 	if not os.path.exists(src):
 		raise Exception("source directory does not exist")
 	if log == "" and os.path.exists(dst):
@@ -110,7 +118,7 @@ def copy_static_files(src, dst, log = ""):
 				shutil.copy(new_src,dst)
 				#print(f"files: {new_src}")
 				log += f"{new_src}\n"
-		print (f"copy: \n{log}")
+		#print (f"copy: \n{log}")
 		return log
 
 def extract_title(markdown):
